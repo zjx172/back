@@ -5,23 +5,45 @@ const Person=require('../models/Person');
 const Post=require('../models/Post');
 // var openid;
 // //获取用户喜欢接口
-router.post('/home',async(req,res)=>{
+router.post('/likelist',async(req,res)=>{
     console.log(req.body);
     const openid=req.body.openid;
-    console.log(openid);
+    const page=req.body.page;
+    const step=page
     const person=await Person.findOne({openid:openid});
+    const posts=await Post.find().sort({date:-1}).skip(page*10).limit(10);
+    const returnposts=posts.filter((item)=>{
+        if(item.users_like_this_post.indexOf(person._id)!=-1){
+            item.like=1;
+            return item;
+        }
+    })
+    res.json(returnposts);
+})
+router.post('/home',async(req,res)=>{//时间排序 分页操作页数从0开始
+    // console.log(req.body);
+    const openid=req.body.openid;
+    const page=req.body.page;
+    const step=page
+    // console.log(openid);
+    const person=await Person.findOne({openid:openid});
+    console.log(person);
+    // const posts=await Post.find();
+    //分页尝试
+    const posts=await Post.find().sort({date:-1}).skip(page*10).limit(10);
+
     // const posts=await Post.find({users_like_this_post: person._id});
     // posts.forEach((item)=>{
     //     item.like=1;
     // })
-    console.log(person);
-    const posts=await Post.find();
+    // console.log(person);
+    // const posts=await Post.find();
     posts.forEach((item)=>{
-        console.log(item.users_like_this_post);
-        console.log(item.users_like_this_post.indexOf(person._id));
+        // console.log(item.users_like_this_post);
+        // console.log(item.users_like_this_post.indexOf(person._id));
         if(item.users_like_this_post.indexOf(person._id)!=-1){
-            item.like=1;
-            console.log(">>>>");
+            item.like=1;//1为点赞
+            // console.log(">>>>");
         }
     })
     res.json(posts);
@@ -76,7 +98,7 @@ router.post('/login',async(req,res)=>{
         }
     });
 });
-
+// router.get('/likelist')
 router.post('/',async(req,res)=>{
     // console.log(req.body);
     const post=new Post({
@@ -123,7 +145,7 @@ router.get('/:postId',async(req,res)=>{
 router.post('/:postId',async(req,res)=>{
     // console.log(req.body);
     const person=await Person.findOne({openid:req.body.openid});
-    console.log('找到了');
+    // console.log('找到了');
     if(req.body.like==1){ 
         const querypost= await Post.findById({_id:req.body.id});
         const likenumber=querypost.likenumber+1;
