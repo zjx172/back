@@ -3,7 +3,25 @@ const router=express.Router();
 const request=require('request');
 const Person=require('../models/Person');
 const Post=require('../models/Post');
-// var openid;
+
+router.post('/hotlist',async(req,res)=>{
+    console.log(req.body);
+    const openid=req.body.openid;
+    const page=req.body.page;
+    const step=page
+    const person=await Person.findOne({openid:openid});
+    const posts=await Post.find().sort({'likenumber':-1}).skip(page*10).limit(10);
+    posts.forEach((item)=>{
+        // console.log(item.users_like_this_post);
+        // console.log(item.users_like_this_post.indexOf(person._id));
+        if(item.users_like_this_post.indexOf(person._id)!=-1){
+            item.like=1;//1为点赞
+            // console.log(">>>>");
+        }
+    })
+    res.json(posts);
+})
+
 // //获取用户喜欢接口
 router.post('/likelist',async(req,res)=>{
     console.log(req.body);
